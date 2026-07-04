@@ -159,6 +159,12 @@
   <!-- 保存/読込 -->
   <section id="view-io" class="view">
     <div class="card-panel">
+      <h2>新着カードの自動取り込み</h2>
+      <p class="muted small">別の場所で生成されたカードJSONを<code>inbox/</code>フォルダに置いて公開すると、次にこのページを開いたときに自動で取り込まれます。今すぐ確認することもできます。</p>
+      <button id="check-inbox-btn" class="btn">今すぐ新着を確認</button>
+      <p id="inbox-status" class="muted small"></p>
+    </div>
+    <div class="card-panel">
       <h2>エクスポート</h2>
       <p class="muted small">現在のカード・進捗をJSONファイルとして保存します。他の端末に持っていく場合はこのファイルを読み込んでください。</p>
       <button id="export-btn" class="btn primary">JSONファイルをダウンロード</button>

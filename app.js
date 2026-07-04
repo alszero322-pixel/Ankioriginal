@@ -683,11 +683,12 @@
 
   function importCards(cards, mode) {
     if (mode === "replace") {
-      data.cards = cards.map(normalizeImportedCard);
+      data.cards = cards.map((raw) => normalizeImportedCard(raw, null));
     } else {
       const byId = new Map(data.cards.map((c) => [c.id, c]));
       for (const raw of cards) {
-        const c = normalizeImportedCard(raw);
+        const existing = raw.id ? byId.get(raw.id) : null;
+        const c = normalizeImportedCard(raw, existing);
         byId.set(c.id, c);
       }
       data.cards = Array.from(byId.values());
@@ -695,9 +696,11 @@
     saveData();
   }
 
-  function normalizeImportedCard(raw) {
+  // existing: the current card with this id, if any (preserved so re-importing
+  // the same id — e.g. an inbox file fetched again — never wipes SRS progress)
+  function normalizeImportedCard(raw, existing) {
     return {
-      id: raw.id || uid(),
+      id: raw.id || (existing && existing.id) || uid(),
       type: raw.type === "cloze" ? "cloze" : "flashcard",
       major: raw.major || "",
       middle: raw.middle || "",
@@ -705,9 +708,9 @@
       front: raw.front || "",
       back: raw.back || "",
       text: raw.text || "",
-      createdAt: raw.createdAt || new Date().toISOString(),
-      srs: raw.srs || newSrs(),
-      stats: raw.stats || { correct: 0, incorrect: 0, history: [] },
+      createdAt: (existing && existing.createdAt) || raw.createdAt || new Date().toISOString(),
+      srs: raw.srs || (existing && existing.srs) || newSrs(),
+      stats: raw.stats || (existing && existing.stats) || { correct: 0, incorrect: 0, history: [] },
     };
   }
 
@@ -716,6 +719,72 @@
     renderHome();
     alert("サンプルカードを追加しました。");
   });
+
+  /* ---------- inbox auto-import ---------- */
+  // Fetches inbox/manifest.json (relative to this page, so it works under a
+  // GitHub Pages subpath) and merges in any card files not yet imported on
+  // this device. Silent on first load unless there is something to report;
+  // the manual button always reports a result. Requires http(s), not file://.
+
+  const INBOX_MANIFEST_URL = "inbox/manifest.json";
+  const IMPORTED_INBOX_KEY = "studyAppData.importedInboxFiles";
+
+  function getImportedInboxFiles() {
+    try {
+      return JSON.parse(localStorage.getItem(IMPORTED_INBOX_KEY) || "[]");
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function markInboxFileImported(name) {
+    const list = getImportedInboxFiles();
+    if (!list.includes(name)) {
+      list.push(name);
+      localStorage.setItem(IMPORTED_INBOX_KEY, JSON.stringify(list));
+    }
+  }
+
+  async function checkInbox(manual) {
+    const statusEl = document.getElementById("inbox-status");
+    try {
+      const manifestRes = await fetch(INBOX_MANIFEST_URL, { cache: "no-store" });
+      if (!manifestRes.ok) throw new Error("manifest not found");
+      const manifest = await manifestRes.json();
+      const files = Array.isArray(manifest.files) ? manifest.files : [];
+      const imported = new Set(getImportedInboxFiles());
+      const pending = files.filter((f) => !imported.has(f));
+
+      if (pending.length === 0) {
+        if (manual && statusEl) statusEl.textContent = "新しいカードはありません。";
+        return;
+      }
+
+      let totalCards = 0;
+      for (const filename of pending) {
+        try {
+          const res = await fetch("inbox/" + filename, { cache: "no-store" });
+          if (res.ok) {
+            const json = await res.json();
+            if (json && Array.isArray(json.cards)) {
+              importCards(json.cards, "merge");
+              totalCards += json.cards.length;
+            }
+          }
+        } catch (e) {
+          continue; // leave unmarked so it's retried next check
+        }
+        markInboxFileImported(filename);
+      }
+
+      if (statusEl) statusEl.textContent = `新しいカードを${totalCards}枚取り込みました（${pending.length}ファイル）。`;
+      renderHome();
+    } catch (e) {
+      if (manual && statusEl) statusEl.textContent = "新着チェックに失敗しました（オフライン、またはinboxが未設定の可能性があります）。";
+    }
+  }
+
+  document.getElementById("check-inbox-btn").addEventListener("click", () => checkInbox(true));
 
   /* ---------- escaping helpers ---------- */
 
@@ -729,4 +798,5 @@
   /* ---------- init ---------- */
 
   showView("home");
+  checkInbox(false);
 })();
