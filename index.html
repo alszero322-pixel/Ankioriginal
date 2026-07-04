@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暗記カード学習アプリ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>学習カード</h1>
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="home">ホーム</button>
+    <button class="tab-btn" data-view="cards">カード管理</button>
+    <button class="tab-btn" data-view="stats">統計</button>
+    <button class="tab-btn" data-view="io">保存/読込</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ホーム -->
+  <section id="view-home" class="view active">
+    <div class="card-panel">
+      <h2>今日の復習</h2>
+      <p><span id="due-count">0</span> 枚が復習予定です（全 <span id="total-count">0</span> 枚）</p>
+    </div>
+
+    <div class="card-panel">
+      <h2>出題範囲</h2>
+      <div id="category-tree" class="category-tree"></div>
+    </div>
+
+    <div class="card-panel">
+      <h2>学習モード</h2>
+      <div class="option-row">
+        <label><input type="radio" name="mode-type" value="all" checked> すべて</label>
+        <label><input type="radio" name="mode-type" value="cloze"> 穴埋めのみ</label>
+        <label><input type="radio" name="mode-type" value="flashcard"> 暗記カードのみ</label>
+      </div>
+      <div class="option-row">
+        <label><input type="radio" name="mode-scope" value="due" checked> 復習期限のカードのみ</label>
+        <label><input type="radio" name="mode-scope" value="all"> 選択範囲すべて</label>
+      </div>
+      <div class="option-row">
+        <label><input type="checkbox" id="shuffle-toggle" checked> シャッフルする</label>
+      </div>
+      <button id="start-study-btn" class="btn primary">学習開始</button>
+      <p id="home-empty-msg" class="muted" hidden>カードがありません。「カード管理」から追加するか、「保存/読込」からサンプルを読み込んでください。</p>
+    </div>
+  </section>
+
+  <!-- カード管理 -->
+  <section id="view-cards" class="view">
+    <div class="card-panel">
+      <div class="row-between">
+        <h2>カード一覧</h2>
+        <button id="new-card-btn" class="btn primary">＋ 新規カード</button>
+      </div>
+      <div class="option-row">
+        <select id="cards-filter-major"><option value="">大分類: すべて</option></select>
+        <select id="cards-filter-middle"><option value="">中分類: すべて</option></select>
+        <select id="cards-filter-minor"><option value="">小分類: すべて</option></select>
+      </div>
+      <div id="cards-list" class="cards-list"></div>
+    </div>
+  </section>
+
+  <!-- カード編集フォーム（モーダル） -->
+  <div id="card-form-overlay" class="overlay" hidden>
+    <div class="modal">
+      <h2 id="card-form-title">新規カード</h2>
+      <input type="hidden" id="edit-card-id">
+
+      <div class="option-row">
+        <label><input type="radio" name="card-type" value="flashcard" checked> 暗記カード（表裏）</label>
+        <label><input type="radio" name="card-type" value="cloze"> 穴埋め</label>
+      </div>
+
+      <div class="field-row">
+        <label>大分類</label>
+        <input type="text" id="field-major" list="major-list" placeholder="例: IT">
+        <datalist id="major-list"></datalist>
+      </div>
+      <div class="field-row">
+        <label>中分類</label>
+        <input type="text" id="field-middle" list="middle-list" placeholder="例: セキュリティ">
+        <datalist id="middle-list"></datalist>
+      </div>
+      <div class="field-row">
+        <label>小分類</label>
+        <input type="text" id="field-minor" list="minor-list" placeholder="例: CCNA">
+        <datalist id="minor-list"></datalist>
+      </div>
+
+      <div id="flashcard-fields">
+        <div class="field-row">
+          <label>表（問題）</label>
+          <textarea id="field-front" rows="3"></textarea>
+        </div>
+        <div class="field-row">
+          <label>裏（答え）</label>
+          <textarea id="field-back" rows="3"></textarea>
+        </div>
+      </div>
+
+      <div id="cloze-fields" hidden>
+        <div class="field-row">
+          <label>本文（答えを [[ ]] で囲む）</label>
+          <textarea id="field-cloze" rows="4" placeholder="例: 日本の首都は [[東京]] である。"></textarea>
+          <p class="muted small">複数の空欄も可: [[TCP]] は信頼性のある通信、[[UDP]] は速度重視。</p>
+        </div>
+      </div>
+
+      <div class="row-between">
+        <button id="delete-card-btn" class="btn danger" hidden>削除</button>
+        <div>
+          <button id="cancel-card-btn" class="btn">キャンセル</button>
+          <button id="save-card-btn" class="btn primary">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 学習画面 -->
+  <section id="view-study" class="view">
+    <div class="card-panel">
+      <div class="row-between">
+        <span id="study-progress">0 / 0</span>
+        <button id="quit-study-btn" class="btn">中断</button>
+      </div>
+      <div id="study-category-label" class="muted small"></div>
+    </div>
+
+    <div id="study-area" class="card-panel study-area"></div>
+    <div id="study-empty" class="card-panel" hidden>
+      <p>対象カードがありません。範囲やモードを変えてください。</p>
+      <button id="back-home-btn" class="btn primary">ホームに戻る</button>
+    </div>
+  </section>
+
+  <!-- 統計 -->
+  <section id="view-stats" class="view">
+    <div class="card-panel">
+      <h2>全体</h2>
+      <p>総カード数: <span id="stats-total">0</span> / 総復習回数: <span id="stats-reviews">0</span> / 全体正答率: <span id="stats-accuracy">-</span></p>
+    </div>
+    <div class="card-panel">
+      <h2>カテゴリ別正答率</h2>
+      <div id="stats-by-category"></div>
+    </div>
+    <div class="card-panel">
+      <h2>直近の学習履歴</h2>
+      <div id="stats-history"></div>
+    </div>
+  </section>
+
+  <!-- 保存/読込 -->
+  <section id="view-io" class="view">
+    <div class="card-panel">
+      <h2>エクスポート</h2>
+      <p class="muted small">現在のカード・進捗をJSONファイルとして保存します。他の端末に持っていく場合はこのファイルを読み込んでください。</p>
+      <button id="export-btn" class="btn primary">JSONファイルをダウンロード</button>
+    </div>
+    <div class="card-panel">
+      <h2>インポート</h2>
+      <input type="file" id="import-file" accept="application/json">
+      <div class="option-row">
+        <label><input type="radio" name="import-mode" value="merge" checked> 追加（既存カードは維持し、新しいものだけ追加/更新）</label>
+        <label><input type="radio" name="import-mode" value="replace"> 置き換え（現在のデータを削除して読み込む）</label>
+      </div>
+      <button id="import-btn" class="btn primary">読み込む</button>
+      <p id="import-msg" class="muted small"></p>
+    </div>
+    <div class="card-panel">
+      <h2>サンプルデータ</h2>
+      <p class="muted small">試しに使ってみたい場合はサンプルカードを読み込めます。</p>
+      <button id="load-sample-btn" class="btn">サンプルを追加</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

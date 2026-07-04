@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "id": "sample1",
+      "type": "flashcard",
+      "major": "IT",
+      "middle": "ネットワーク",
+      "minor": "CCNA",
+      "front": "OSI参照モデルの第3層は何と呼ばれる？",
+      "back": "ネットワーク層",
+      "front_back_note": "",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "srs": { "ef": 2.5, "interval": 0, "reps": 0, "due": "2026-07-04", "lastReviewed": null },
+      "stats": { "correct": 0, "incorrect": 0, "history": [] }
+    },
+    {
+      "id": "sample2",
+      "type": "cloze",
+      "major": "IT",
+      "middle": "セキュリティ",
+      "minor": "基礎",
+      "front": "",
+      "back": "",
+      "text": "通信を暗号化し改ざんを検知するプロトコルとして、Webでは [[TLS]] が広く使われている。",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "srs": { "ef": 2.5, "interval": 0, "reps": 0, "due": "2026-07-04", "lastReviewed": null },
+      "stats": { "correct": 0, "incorrect": 0, "history": [] }
+    },
+    {
+      "id": "sample3",
+      "type": "flashcard",
+      "major": "英語",
+      "middle": "単語",
+      "minor": "TOEIC",
+      "front": "\"reimburse\" の意味は？",
+      "back": "（費用などを）払い戻す、返済する",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "srs": { "ef": 2.5, "interval": 0, "reps": 0, "due": "2026-07-04", "lastReviewed": null },
+      "stats": { "correct": 0, "incorrect": 0, "history": [] }
+    },
+    {
+      "id": "sample4",
+      "type": "cloze",
+      "major": "英語",
+      "middle": "文法",
+      "minor": "基礎",
+      "text": "現在完了形は [[have]] または [[has]] + 過去分詞で作る。",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "srs": { "ef": 2.5, "interval": 0, "reps": 0, "due": "2026-07-04", "lastReviewed": null },
+      "stats": { "correct": 0, "incorrect": 0, "history": [] }
+    }
+  ]
+}
